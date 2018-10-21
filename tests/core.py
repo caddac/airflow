@@ -149,7 +149,7 @@ class CoreTest(unittest.TestCase):
             datetime(2015, 1, 2, 0, 0),
             dag_run.execution_date,
             msg='dag_run.execution_date did not match expectation: {0}'
-            .format(dag_run.execution_date)
+                .format(dag_run.execution_date)
         )
         self.assertEqual(State.RUNNING, dag_run.state)
         self.assertFalse(dag_run.external_trigger)
@@ -176,7 +176,7 @@ class CoreTest(unittest.TestCase):
             datetime(2015, 1, 2, 0, 0),
             dag_run.execution_date,
             msg='dag_run.execution_date did not match expectation: {0}'
-            .format(dag_run.execution_date)
+                .format(dag_run.execution_date)
         )
         self.assertEqual(State.RUNNING, dag_run.state)
         self.assertFalse(dag_run.external_trigger)
@@ -1092,6 +1092,7 @@ class CliTests(unittest.TestCase):
 
         session.query(models.Pool).delete()
         session.query(models.Variable).delete()
+        session.query(models.Connection).delete()
         session.commit()
         session.close()
 
@@ -1226,7 +1227,8 @@ class CliTests(unittest.TestCase):
             p.wait()
             self.assertEqual(0, p.returncode)
 
-    def test_cli_connections_add_delete(self):
+    def test_cli_connections(self):
+        self.maxDiff = None
         # Add connections:
         uri = 'postgresql://airflow:airflow@host:5432/airflow'
         with mock.patch('sys.stdout',
@@ -1251,37 +1253,26 @@ class CliTests(unittest.TestCase):
             cli.connections(self.parser.parse_args(
                 ['connections', '-a', '--conn_id=new6',
                  '--conn_uri', "", '--conn_type=google_cloud_platform', '--conn_extra', "{'extra': 'yes'}"]))
+            cli.connections(self.parser.parse_args(
+                ['connections', '--add', '--conn_id=duplicate1',
+                 '--conn_uri=%s' % uri, '--conn_extra', "{'extra': 'yes'}"]))
+            cli.connections(self.parser.parse_args(
+                ['connections', '-a', '--conn_id=duplicate1',
+                 '--conn_uri=%s' % uri, '--conn_extra', "{'extra': 'yes'}"]))
             stdout = mock_stdout.getvalue()
 
         # Check addition stdout
         lines = [l for l in stdout.split('\n') if len(l) > 0]
-        self.assertListEqual(lines, [
-            ("\tSuccessfully added `conn_id`=new1 : " +
-             "postgresql://airflow:airflow@host:5432/airflow"),
-            ("\tSuccessfully added `conn_id`=new2 : " +
-             "postgresql://airflow:airflow@host:5432/airflow"),
-            ("\tSuccessfully added `conn_id`=new3 : " +
-             "postgresql://airflow:airflow@host:5432/airflow"),
-            ("\tSuccessfully added `conn_id`=new4 : " +
-             "postgresql://airflow:airflow@host:5432/airflow"),
-            ("\tSuccessfully added `conn_id`=new5 : " +
-             "hive_metastore://airflow:airflow@host:9083/airflow"),
-            ("\tSuccessfully added `conn_id`=new6 : " +
-             "google_cloud_platform://:@:")
-        ])
 
-        # Attempt to add duplicate
-        with mock.patch('sys.stdout',
-                        new_callable=six.StringIO) as mock_stdout:
-            cli.connections(self.parser.parse_args(
-                ['connections', '--add', '--conn_id=new1',
-                 '--conn_uri=%s' % uri]))
-            stdout = mock_stdout.getvalue()
-
-        # Check stdout for addition attempt
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
-            "\tA connection with `conn_id`=new1 already exists",
+            "\tSuccessfully added `conn_id`=new1 : postgres://airflow:airflow@host:5432/airflow",
+            "\tSuccessfully added `conn_id`=new2 : postgres://airflow:airflow@host:5432/airflow",
+            "\tSuccessfully added `conn_id`=new3 : postgres://airflow:airflow@host:5432/airflow",
+            "\tSuccessfully added `conn_id`=new4 : postgres://airflow:airflow@host:5432/airflow",
+            "\tSuccessfully added `conn_id`=new5 : hive_metastore://airflow:airflow@host:9083/airflow",
+            "\tSuccessfully added `conn_id`=new6 : google_cloud_platform://:@:",
+            "\tSuccessfully added `conn_id`=duplicate1 : postgres://airflow:airflow@host:5432/airflow",
+            "\tSuccessfully added `conn_id`=duplicate1 : postgres://airflow:airflow@host:5432/airflow",
         ])
 
         # Attempt to add without providing conn_id
@@ -1312,14 +1303,13 @@ class CliTests(unittest.TestCase):
              " ['conn_uri or conn_type']"),
         ])
 
-        # Prepare to add connections
+        # validate adding connections reached the DB
         session = settings.Session()
         extra = {'new1': None,
                  'new2': None,
                  'new3': "{'extra': 'yes'}",
-                 'new4': "{'extra': 'yes'}"}
+                 'new4': "{'extra': 'yes'}", }
 
-        # Add connections
         for index in range(1, 6):
             conn_id = 'new%s' % index
             result = (session
@@ -1334,6 +1324,119 @@ class CliTests(unittest.TestCase):
             elif conn_id == 'new5':
                 self.assertEqual(result, (conn_id, 'hive_metastore', 'host',
                                           9083, None))
+            elif conn_id == 'new6':
+                self.assertEqual(result, (conn_id, 'google_cloud_platform',
+                                          None, None, "{'extra': 'yes'}"))
+
+        # validate duplicate connections made it to the db
+        dup_conns = (session
+                     .query(models.Connection)
+                     .filter(models.Connection.conn_id == 'duplicate1')).all()
+        self.assertEqual(2, len(dup_conns))
+        for conn in dup_conns:
+            result = (conn.conn_id, conn.conn_type, conn.host,
+                      conn.port, conn.get_extra())
+            self.assertEqual(result, ('duplicate1', 'postgres', 'host', 5432,
+                                      "{'extra': 'yes'}"))
+
+        # List Connections
+        with mock.patch('sys.stdout',
+                        new_callable=six.StringIO) as mock_stdout:
+            cli.connections(self.parser.parse_args(
+                ['connections', '--list']))
+            stdout = mock_stdout.getvalue()
+
+        # not sure a better assertion for tabulated output
+        self.assertIsNotNone(stdout)
+
+        # Update Connections
+        new_uri = 'postgresql://airflow:different_password@host:1234/airflow'
+
+        with mock.patch('sys.stdout',
+                        new_callable=six.StringIO) as mock_stdout:
+            cli.connections(self.parser.parse_args(
+                ['connections', '--update', '--conn_id=new1',
+                 '--conn_uri=%s' % new_uri]))
+
+            cli.connections(self.parser.parse_args(
+                ['connections', '-u', '--conn_id=new2',
+                 '--conn_uri=%s' % new_uri]))
+
+            cli.connections(self.parser.parse_args(
+                ['connections', '--update', '--conn_id=new3',
+                 '--conn_uri=%s' % new_uri, '--conn_extra', "{'extra': 'yes'}"]))
+
+            cli.connections(self.parser.parse_args(
+                ['connections', '-u', '--conn_id=new4',
+                 '--conn_uri=%s' % new_uri, '--conn_extra', "{'extra': 'yes'}"]))
+
+            cli.connections(self.parser.parse_args(
+                ['connections', '--update', '--conn_id=new5',
+                 '--conn_type=hive_metastore', '--conn_login=airflow',
+                 '--conn_password=different_password', '--conn_host=host',
+                 '--conn_port=1234', '--conn_schema=airflow']))
+
+            cli.connections(self.parser.parse_args(
+                ['connections', '-u', '--conn_id=new6',
+                 '--conn_uri', "", '--conn_type=google_cloud_platform',
+                 '--conn_extra', "{'extra': 'yes'}"]))
+
+            # attempt to update a duplicate connection
+            cli.connections(self.parser.parse_args(
+                ['connections', '--update', '--conn_id=duplicate1',
+                 '--conn_uri=%s' % new_uri, '--conn_extra', "{'extra': 'yes'}"]))
+
+            stdout = mock_stdout.getvalue()
+
+        # Check update stdout
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        self.assertListEqual(lines, [
+            "\tSuccessfully updated `conn_id`=new1 : postgres://airflow:different_password@host:1234/airflow",
+            "\tSuccessfully updated `conn_id`=new2 : postgres://airflow:different_password@host:1234/airflow",
+            "\tSuccessfully updated `conn_id`=new3 : postgres://airflow:different_password@host:1234/airflow",
+            "\tSuccessfully updated `conn_id`=new4 : postgres://airflow:different_password@host:1234/airflow",
+            "\tSuccessfully updated `conn_id`=new5 : "
+            "hive_metastore://airflow:different_password@host:1234/airflow",
+            "\tSuccessfully updated `conn_id`=new6 : google_cloud_platform://:@:",
+            "\tUpdating multiple connections is not supported, "
+            "Found multiple connections with `conn_id`=duplicate1"
+        ])
+
+        # Attempt to udpate without providing conn_uri
+        with mock.patch('sys.stdout',
+                        new_callable=six.StringIO) as mock_stdout:
+            cli.connections(self.parser.parse_args(
+                ['connections', '--update', '--conn_id=new']))
+            stdout = mock_stdout.getvalue()
+
+        # Check stdout
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        self.assertListEqual(lines, [
+            ("\tThe following args are required to update a connection:" +
+             " ['conn_uri or conn_type']"),
+        ])
+
+        # validate updates reached the DB
+        session = settings.Session()
+        extra = {'new1': None,
+                 'new2': None,
+                 'new3': "{'extra': 'yes'}",
+                 'new4': "{'extra': 'yes'}", }
+
+        for index in range(1, 6):
+            conn_id = 'new%s' % index
+            result = (session
+                      .query(models.Connection)
+                      .filter(models.Connection.conn_id == conn_id)
+                      .first())
+            result = (result.conn_id, result.conn_type, result.host,
+                      result.port, result.get_extra())
+            if conn_id in ['new1', 'new2', 'new3', 'new4']:
+                self.assertEqual(result, (conn_id, 'postgres', 'host', 1234,
+                                          extra[conn_id]))
+            elif conn_id == 'new5':
+                self.assertEqual(result, (conn_id, 'hive_metastore', 'host',
+                                          1234, None))
             elif conn_id == 'new6':
                 self.assertEqual(result, (conn_id, 'google_cloud_platform',
                                           None, None, "{'extra': 'yes'}"))
@@ -1392,15 +1495,14 @@ class CliTests(unittest.TestCase):
         with mock.patch('sys.stdout',
                         new_callable=six.StringIO) as mock_stdout:
             cli.connections(self.parser.parse_args(
-                ['connections', '--delete', '--conn_id=fake',
+                ['connections', '--delete',
                  '--conn_uri=%s' % uri, '--conn_type=fake-type']))
             stdout = mock_stdout.getvalue()
 
         # Check deletion attempt stdout
         lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
-            ("\tThe following args are not compatible with the " +
-             "--delete flag: ['conn_uri', 'conn_type']"),
+            '\tTo delete a connection, you must provide a value for the --conn_id flag.',
         ])
 
         session.close()

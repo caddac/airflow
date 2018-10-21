@@ -58,7 +58,7 @@ import hashlib
 
 import uuid
 from datetime import datetime
-from urllib.parse import urlparse, quote, parse_qsl
+from urllib.parse import urlparse, quote, parse_qsl, urlunparse
 from sqlalchemy import (
     Boolean, Column, DateTime, Float, ForeignKey, ForeignKeyConstraint, Index,
     Integer, LargeBinary, PickleType, String, Text, UniqueConstraint,
@@ -806,6 +806,15 @@ class Connection(Base, LoggingMixin):
         except Exception:
             pass
 
+    def get_uri(self, show_password=False):
+        return urlunparse((self.conn_type,
+                           '{login}:{password}@{host}:{port}'
+                           .format(login=self.login or '',
+                                   password=(self.password or '') if show_password else '******',
+                                   host=self.host or '',
+                                   port=self.port or ''),
+                           self.schema or '', '', '', ''))
+
     def __repr__(self):
         return self.conn_id
 
@@ -821,6 +830,19 @@ class Connection(Base, LoggingMixin):
                 self.log.error("Failed parsing the json for conn_id %s", self.conn_id)
 
         return obj
+
+    def __eq__(self, other):
+        self_dict = self.__dict__
+        other_dict = other.__dict__
+
+        return \
+            self_dict['conn_type'] == other_dict['conn_type'] and \
+            self_dict['host'] == other_dict['host'] and \
+            self_dict['login'] == other_dict['login'] and \
+            self.get_password() == other.get_password() and \
+            self_dict['schema'] == other_dict['schema'] and \
+            self_dict['port'] == other_dict['port'] and \
+            self.get_extra() == other.get_extra()
 
 
 class DagPickle(Base):
