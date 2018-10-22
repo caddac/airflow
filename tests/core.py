@@ -1180,7 +1180,37 @@ class CliTests(unittest.TestCase):
 
         resetdb_mock.assert_called_once_with(False)
 
-    def test_cli_connections_list(self):
+    def test_cli_list_connections(self):
+        uri = 'postgresql://airflow:airflow@host:5432/airflow'
+
+        cli.connections(self.parser.parse_args(
+            ['connections', '--add', '--conn_id=new1',
+             '--conn_uri=%s' % uri]))
+        cli.connections(self.parser.parse_args(
+            ['connections', '-a', '--conn_id=new2',
+             '--conn_uri=%s' % uri]))
+        cli.connections(self.parser.parse_args(
+            ['connections', '--add', '--conn_id=new3',
+             '--conn_uri=%s' % uri, '--conn_extra', "{'extra': 'yes'}"]))
+        cli.connections(self.parser.parse_args(
+            ['connections', '-a', '--conn_id=new4',
+             '--conn_uri=%s' % uri, '--conn_extra', "{'extra': 'yes'}"]))
+        cli.connections(self.parser.parse_args(
+            ['connections', '--add', '--conn_id=new5',
+             '--conn_type=hive_metastore', '--conn_login=airflow',
+             '--conn_password=airflow', '--conn_host=host',
+             '--conn_port=9083', '--conn_schema=airflow']))
+        cli.connections(self.parser.parse_args(
+            ['connections', '-a', '--conn_id=new6',
+             '--conn_uri', "", '--conn_type=google_cloud_platform', '--conn_extra', "{'extra': 'yes'}"]))
+        cli.connections(self.parser.parse_args(
+            ['connections', '--add', '--conn_id=duplicate1',
+             '--conn_uri=%s' % uri, '--conn_extra', "{'extra': 'yes'}"]))
+        cli.connections(self.parser.parse_args(
+            ['connections', '-a', '--conn_id=duplicate1',
+             '--conn_uri=%s' % uri, '--conn_extra', "{'extra': 'yes'}"]))
+
+
         with mock.patch('sys.stdout',
                         new_callable=six.StringIO) as mock_stdout:
             cli.connections(self.parser.parse_args(['connections', '--list']))
@@ -1192,33 +1222,13 @@ class CliTests(unittest.TestCase):
 
         # Assert that some of the connections are present in the output as
         # expected:
-        self.assertIn(['aws_default', 'aws'], conns)
-        self.assertIn(['beeline_default', 'beeline'], conns)
-        self.assertIn(['emr_default', 'emr'], conns)
-        self.assertIn(['mssql_default', 'mssql'], conns)
-        self.assertIn(['mysql_default', 'mysql'], conns)
-        self.assertIn(['postgres_default', 'postgres'], conns)
-        self.assertIn(['wasb_default', 'wasb'], conns)
-        self.assertIn(['segment_default', 'segment'], conns)
-
-        # Attempt to list connections with invalid cli args
-        with mock.patch('sys.stdout',
-                        new_callable=six.StringIO) as mock_stdout:
-            cli.connections(self.parser.parse_args(
-                ['connections', '--list', '--conn_id=fake', '--conn_uri=fake-uri',
-                 '--conn_type=fake-type', '--conn_host=fake_host',
-                 '--conn_login=fake_login', '--conn_password=fake_password',
-                 '--conn_schema=fake_schema', '--conn_port=fake_port', '--conn_extra=fake_extra']))
-            stdout = mock_stdout.getvalue()
-
-        # Check list attempt stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
-        self.assertListEqual(lines, [
-            ("\tThe following args are not compatible with the " +
-             "--list flag: ['conn_id', 'conn_uri', 'conn_extra', " +
-             "'conn_type', 'conn_host', 'conn_login', " +
-             "'conn_password', 'conn_schema', 'conn_port']"),
-        ])
+        self.assertIn(['new1', 'postgres'], conns)
+        self.assertIn(['new2', 'postgres'], conns)
+        self.assertIn(['new3', 'postgres'], conns)
+        self.assertIn(['new4', 'postgres'], conns)
+        self.assertIn(['new5', 'hive_metastore'], conns)
+        self.assertIn(['new6', 'google_cloud_platform'], conns)
+        self.assertIn(['duplicate1', 'postgres'], conns)
 
     def test_cli_connections_list_redirect(self):
         cmd = ['airflow', 'connections', '--list']
@@ -1228,7 +1238,6 @@ class CliTests(unittest.TestCase):
             self.assertEqual(0, p.returncode)
 
     def test_cli_connections(self):
-        self.maxDiff = None
         # Add connections:
         uri = 'postgresql://airflow:airflow@host:5432/airflow'
         with mock.patch('sys.stdout',
@@ -1262,7 +1271,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check addition stdout
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
 
         self.assertListEqual(lines, [
             "Successfully added `conn_id`=new1 : postgres://airflow:airflow@host:5432/airflow",
@@ -1283,7 +1292,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check stdout for addition attempt
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             ("The following args are required to add a connection:" +
              " ['conn_id']"),
@@ -1297,7 +1306,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check stdout for addition attempt
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             ("The following args are required to add a connection:" +
              " ['conn_uri or conn_type']"),
@@ -1339,16 +1348,6 @@ class CliTests(unittest.TestCase):
             self.assertEqual(result, ('duplicate1', 'postgres', 'host', 5432,
                                       "{'extra': 'yes'}"))
 
-        # List Connections
-        with mock.patch('sys.stdout',
-                        new_callable=six.StringIO) as mock_stdout:
-            cli.connections(self.parser.parse_args(
-                ['connections', '--list']))
-            stdout = mock_stdout.getvalue()
-
-        # not sure a better assertion for tabulated output
-        self.assertIsNotNone(stdout)
-
         # Update Connections
         new_uri = 'postgresql://airflow:different_password@host:1234/airflow'
 
@@ -1389,7 +1388,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check update stdout
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             "Successfully updated `conn_id`=new1 : postgres://airflow:different_password@host:1234/airflow",
             "Successfully updated `conn_id`=new2 : postgres://airflow:different_password@host:1234/airflow",
@@ -1410,7 +1409,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check stdout
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             ("The following args are required to update a connection:" +
              " ['conn_uri or conn_type']"),
@@ -1459,7 +1458,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check deletion stdout
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             "Successfully deleted `conn_id`=new1",
             "Successfully deleted `conn_id`=new2",
@@ -1486,7 +1485,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check deletion attempt stdout
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             "Did not find a connection with `conn_id`=fake",
         ])
@@ -1500,7 +1499,7 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check deletion attempt stdout
-        lines = [l for l in stdout.split('') if len(l) > 0]
+        lines = [l for l in stdout.split('\n') if len(l) > 0]
         self.assertListEqual(lines, [
             'To delete a connection, you must provide a value for the --conn_id flag.',
         ])

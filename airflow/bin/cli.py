@@ -1171,7 +1171,7 @@ def connections(args):
             print(ma)
         else:
             # format success message!
-            msg = '\n\tSuccessfully added `conn_id`={conn_id} : {uri}\n'
+            msg = 'Successfully added `conn_id`={conn_id} : {uri}\n'
             msg = msg.format(conn_id=new_conn.conn_id,
                              uri=new_conn.get_uri(True))
             print(msg)
@@ -1198,7 +1198,7 @@ def connections(args):
             print(cnf)
         else:
             # format success message!
-            msg = '\n\tSuccessfully updated `conn_id`={conn_id} : {uri}\n'
+            msg = 'Successfully updated `conn_id`={conn_id} : {uri}\n'
             msg = msg.format(conn_id=new_conn.conn_id,
                              uri=new_conn.get_uri(True))
             print(msg)
