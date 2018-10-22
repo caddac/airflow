@@ -1132,6 +1132,12 @@ alternative_conn_specs = ['conn_type', 'conn_host',
 def connections(args):
     if args.list:
         conns = api_client.list_connections()
+        # format it for the cli
+        conns = list(map(lambda c: (c.conn_id, c.conn_type,
+                                    c.host, c.port,
+                                    c.is_encrypted,
+                                    c.is_extra_encrypted,
+                                    c.extra), conns))
         conns = [map(reprlib.repr, conn) for conn in conns]
         msg = tabulate(conns, ['Conn Id', 'Conn Type', 'Host', 'Port',
                                'Is Encrypted', 'Is Extra Encrypted', 'Extra'],
@@ -1818,7 +1824,8 @@ class CLIFactory(object):
         'delete_all': Arg(
             ('--delete_all',),
             help='Flag to indicate if multiple connections should be deleted',
-            type=bool),
+            action="store_true",
+            default=False),
         # users
         'username': Arg(
             ('--username',),

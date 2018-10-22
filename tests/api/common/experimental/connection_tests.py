@@ -96,14 +96,14 @@ class ConnectionTests(unittest.TestCase):
         with self.assertRaises(MissingArgument) as ma:
             connections.add_connection(conn_id=None, conn_uri=uri)
             self.assertEqual(ma.exception,
-                             "\tThe following args are required to add a connection:" +
+                             "The following args are required to add a connection:" +
                              " ['conn_id']")
 
         # Attempt to add without providing conn_uri
         with self.assertRaises(MissingArgument) as ma:
             connections.add_connection(conn_id="new5")
             self.assertEqual(ma.exception,
-                             "\tThe following args are required to add a connection:" +
+                             "The following args are required to add a connection:" +
                              " ['conn_id or conn_type']")
 
         # validate expected connections reached the DB
@@ -162,26 +162,26 @@ class ConnectionTests(unittest.TestCase):
 
         # delete one
         self.assertEqual(connections.delete_connection(conn_id='new1'),
-                         "\n\tSuccessfully deleted `conn_id`=new1\n")
+                         "Successfully deleted `conn_id`=new1")
 
         # try to delete multiple with delete_all=False
         self.assertEqual(connections.delete_connection(conn_id='new2'),
-                         '\n\tFound 2 connection with ' +
-                         '`conn_id`=new2. Specify `delete_all=True` to remove all\n')
+                         'Found 2 connection with ' +
+                         '`conn_id`=new2. Specify `delete_all=True` to remove all')
 
         # make sure none were deleted
         self.assertEqual(2, len((session.query(models.Connection)
                                  .filter(models.Connection.conn_id == 'new2').all())))
 
         self.assertEqual(connections.delete_connection(conn_id='new2', delete_all=True),
-                         "\n\tSuccessfully deleted 2 connections with `conn_id`=new2\n")
+                         "Successfully deleted 2 connections with `conn_id`=new2")
 
         # make sure none were deleted
         self.assertEqual(0, len((session.query(models.Connection).all())))
 
         # Attempt to delete a non-existing connnection
         self.assertEqual(connections.delete_connection(conn_id='non_existent'),
-                         "\n\tDid not find a connection with `conn_id`=non_existent\n")
+                         "Did not find a connection with `conn_id`=non_existent")
 
         # Attempt to delete a non-existing connnection
         self.assertRaises(MissingArgument, connections.delete_connection, None)

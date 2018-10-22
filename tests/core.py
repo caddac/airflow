@@ -1262,17 +1262,17 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check addition stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
 
         self.assertListEqual(lines, [
-            "\tSuccessfully added `conn_id`=new1 : postgres://airflow:airflow@host:5432/airflow",
-            "\tSuccessfully added `conn_id`=new2 : postgres://airflow:airflow@host:5432/airflow",
-            "\tSuccessfully added `conn_id`=new3 : postgres://airflow:airflow@host:5432/airflow",
-            "\tSuccessfully added `conn_id`=new4 : postgres://airflow:airflow@host:5432/airflow",
-            "\tSuccessfully added `conn_id`=new5 : hive_metastore://airflow:airflow@host:9083/airflow",
-            "\tSuccessfully added `conn_id`=new6 : google_cloud_platform://:@:",
-            "\tSuccessfully added `conn_id`=duplicate1 : postgres://airflow:airflow@host:5432/airflow",
-            "\tSuccessfully added `conn_id`=duplicate1 : postgres://airflow:airflow@host:5432/airflow",
+            "Successfully added `conn_id`=new1 : postgres://airflow:airflow@host:5432/airflow",
+            "Successfully added `conn_id`=new2 : postgres://airflow:airflow@host:5432/airflow",
+            "Successfully added `conn_id`=new3 : postgres://airflow:airflow@host:5432/airflow",
+            "Successfully added `conn_id`=new4 : postgres://airflow:airflow@host:5432/airflow",
+            "Successfully added `conn_id`=new5 : hive_metastore://airflow:airflow@host:9083/airflow",
+            "Successfully added `conn_id`=new6 : google_cloud_platform://:@:",
+            "Successfully added `conn_id`=duplicate1 : postgres://airflow:airflow@host:5432/airflow",
+            "Successfully added `conn_id`=duplicate1 : postgres://airflow:airflow@host:5432/airflow",
         ])
 
         # Attempt to add without providing conn_id
@@ -1283,9 +1283,9 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check stdout for addition attempt
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            ("\tThe following args are required to add a connection:" +
+            ("The following args are required to add a connection:" +
              " ['conn_id']"),
         ])
 
@@ -1297,9 +1297,9 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check stdout for addition attempt
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            ("\tThe following args are required to add a connection:" +
+            ("The following args are required to add a connection:" +
              " ['conn_uri or conn_type']"),
         ])
 
@@ -1389,16 +1389,16 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check update stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            "\tSuccessfully updated `conn_id`=new1 : postgres://airflow:different_password@host:1234/airflow",
-            "\tSuccessfully updated `conn_id`=new2 : postgres://airflow:different_password@host:1234/airflow",
-            "\tSuccessfully updated `conn_id`=new3 : postgres://airflow:different_password@host:1234/airflow",
-            "\tSuccessfully updated `conn_id`=new4 : postgres://airflow:different_password@host:1234/airflow",
-            "\tSuccessfully updated `conn_id`=new5 : "
+            "Successfully updated `conn_id`=new1 : postgres://airflow:different_password@host:1234/airflow",
+            "Successfully updated `conn_id`=new2 : postgres://airflow:different_password@host:1234/airflow",
+            "Successfully updated `conn_id`=new3 : postgres://airflow:different_password@host:1234/airflow",
+            "Successfully updated `conn_id`=new4 : postgres://airflow:different_password@host:1234/airflow",
+            "Successfully updated `conn_id`=new5 : "
             "hive_metastore://airflow:different_password@host:1234/airflow",
-            "\tSuccessfully updated `conn_id`=new6 : google_cloud_platform://:@:",
-            "\tUpdating multiple connections is not supported, "
+            "Successfully updated `conn_id`=new6 : google_cloud_platform://:@:",
+            "Updating multiple connections is not supported, "
             "Found multiple connections with `conn_id`=duplicate1"
         ])
 
@@ -1410,9 +1410,9 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            ("\tThe following args are required to update a connection:" +
+            ("The following args are required to update a connection:" +
              " ['conn_uri or conn_type']"),
         ])
 
@@ -1459,14 +1459,14 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check deletion stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            "\tSuccessfully deleted `conn_id`=new1",
-            "\tSuccessfully deleted `conn_id`=new2",
-            "\tSuccessfully deleted `conn_id`=new3",
-            "\tSuccessfully deleted `conn_id`=new4",
-            "\tSuccessfully deleted `conn_id`=new5",
-            "\tSuccessfully deleted `conn_id`=new6"
+            "Successfully deleted `conn_id`=new1",
+            "Successfully deleted `conn_id`=new2",
+            "Successfully deleted `conn_id`=new3",
+            "Successfully deleted `conn_id`=new4",
+            "Successfully deleted `conn_id`=new5",
+            "Successfully deleted `conn_id`=new6"
         ])
 
         # Check deletions
@@ -1486,9 +1486,9 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check deletion attempt stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            "\tDid not find a connection with `conn_id`=fake",
+            "Did not find a connection with `conn_id`=fake",
         ])
 
         # Attempt to delete with invalid cli args
@@ -1500,9 +1500,9 @@ class CliTests(unittest.TestCase):
             stdout = mock_stdout.getvalue()
 
         # Check deletion attempt stdout
-        lines = [l for l in stdout.split('\n') if len(l) > 0]
+        lines = [l for l in stdout.split('') if len(l) > 0]
         self.assertListEqual(lines, [
-            '\tTo delete a connection, you must provide a value for the --conn_id flag.',
+            'To delete a connection, you must provide a value for the --conn_id flag.',
         ])
 
         session.close()

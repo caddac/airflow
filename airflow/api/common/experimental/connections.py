@@ -38,12 +38,12 @@ def add_connection(
         missing_args.append('conn_uri or conn_type')
 
     if missing_args:
-        msg = ('\n\tThe following args are required to add a connection:' +
-               ' {missing!r}\n'.format(missing=missing_args))
+        msg = ('The following args are required to add a connection:' +
+               ' {missing!r}'.format(missing=missing_args))
         raise MissingArgument(msg)
     if invalid_args:
-        msg = ('\n\tThe following args are not compatible with the ' +
-               '--add flag and --conn_uri flag: {invalid!r}\n')
+        msg = ('The following args are not compatible with the ' +
+               '--add flag and --conn_uri flag: {invalid!r}')
         msg = msg.format(invalid=invalid_args)
         raise MissingArgument(msg)
     if missing_args or invalid_args:
@@ -65,7 +65,7 @@ def add_connection(
     session.add(new_conn)
     session.commit()
     return new_conn
-    # msg = '\tSuccessfully added `conn_id`={conn_id} : {uri}\n'
+    # msg = '\tSuccessfully added `conn_id`={conn_id} : {uri}'
     # msg = msg.format(conn_id=new_conn.conn_id,
     #                  uri=conn_uri or
     #                      urlunparse((conn_type,
@@ -83,8 +83,8 @@ def add_connection(
 def delete_connection(conn_id, delete_all=False):
 
     if conn_id is None:
-        raise MissingArgument('\n\tTo delete a connection, you must provide a value for ' +
-                              'the --conn_id flag.\n')
+        raise MissingArgument('To delete a connection, you must provide a value for ' +
+                              'the --conn_id flag.')
 
     session = settings.Session()
     to_delete = (session
@@ -96,7 +96,7 @@ def delete_connection(conn_id, delete_all=False):
         for conn in to_delete:
             session.delete(conn)
         session.commit()
-        msg = '\n\tSuccessfully deleted `conn_id`={conn_id}\n'
+        msg = 'Successfully deleted `conn_id`={conn_id}'
         msg = msg.format(conn_id=deleted_conn_id)
         return msg
     elif len(to_delete) > 1:
@@ -107,27 +107,23 @@ def delete_connection(conn_id, delete_all=False):
                 session.delete(conn)
             session.commit()
 
-            msg = '\n\tSuccessfully deleted {num_conns} connections with `conn_id`={conn_id}\n'
+            msg = 'Successfully deleted {num_conns} connections with `conn_id`={conn_id}'
             msg = msg.format(conn_id=deleted_conn_id, num_conns=num_conns)
             return msg
         else:
-            msg = ('\n\tFound {num_conns} connection with ' +
-                   '`conn_id`={conn_id}. Specify `delete_all=True` to remove all\n')
+            msg = ('Found {num_conns} connection with ' +
+                   '`conn_id`={conn_id}. Specify `delete_all=True` to remove all')
             msg = msg.format(conn_id=conn_id, num_conns=len(to_delete))
             return msg
     elif len(to_delete) == 0:
-        msg = '\n\tDid not find a connection with `conn_id`={conn_id}\n'
+        msg = 'Did not find a connection with `conn_id`={conn_id}'
         msg = msg.format(conn_id=conn_id)
         return msg
 
 
 def list_connections():
     session = settings.Session()
-    conns = session.query(Connection.conn_id, Connection.conn_type,
-                          Connection.host, Connection.port,
-                          Connection.is_encrypted,
-                          Connection.is_extra_encrypted,
-                          Connection.extra).all()
+    conns = session.query(Connection).all()
     return conns
 
     # move this formating to the CLI!
@@ -171,12 +167,12 @@ def update_connection(conn_id,
         missing_args.append('conn_uri or conn_type')
 
     if missing_args:
-        msg = ('\n\tThe following args are required to update a connection:' +
-               ' {missing!r}\n'.format(missing=missing_args))
+        msg = ('The following args are required to update a connection:' +
+               ' {missing!r}'.format(missing=missing_args))
         raise MissingArgument(msg)
     if invalid_args:
-        msg = ('\n\tThe following args are not compatible with the ' +
-               '--update flag and --conn_uri flag: {invalid!r}\n')
+        msg = ('The following args are not compatible with the ' +
+               '--update flag and --conn_uri flag: {invalid!r}')
         msg = msg.format(invalid=invalid_args)
         raise MissingArgument(msg)
 
@@ -188,12 +184,12 @@ def update_connection(conn_id,
                      .filter(Connection.conn_id == conn_id)
                      .one())
     except exc.NoResultFound:
-        msg = '\n\tDid not find a connection with `conn_id`={conn_id}\n'
+        msg = 'Did not find a connection with `conn_id`={conn_id}'
         msg = msg.format(conn_id=conn_id)
         raise ConnectionNotFound(msg)
     except exc.MultipleResultsFound:
-        msg = ('\n\tUpdating multiple connections is not supported, Found multiple connections with ' +
-               '`conn_id`={conn_id}\n')
+        msg = ('Updating multiple connections is not supported, Found multiple connections with ' +
+               '`conn_id`={conn_id}')
         msg = msg.format(conn_id=conn_id)
         raise MultipleConnectionsFound(msg)
     else:
@@ -224,7 +220,7 @@ def update_connection(conn_id,
         session.commit()
 
         return to_update
-        # msg = '\n\tSuccessfully updated `conn_id`={conn_id} : {uri}\n'
+        # msg = 'Successfully updated `conn_id`={conn_id} : {uri}'
         # msg = msg.format(conn_id=to_update.conn_id,
         #                  uri=conn_uri or
         #                      urlunparse((conn_type,
@@ -235,3 +231,4 @@ def update_connection(conn_id,
         #                                          port=conn_port or ''),
         #                                  conn_schema or '', '', '', '')))
         # return msg
+
