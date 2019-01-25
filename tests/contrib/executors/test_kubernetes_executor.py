@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
 
 import unittest
@@ -79,7 +84,7 @@ class TestAirflowKubernetesScheduler(unittest.TestCase):
         new_datetime_obj = AirflowKubernetesScheduler._label_safe_datestring_to_datetime(
             serialized_datetime)
 
-        self.assertEquals(datetime_obj, new_datetime_obj)
+        self.assertEqual(datetime_obj, new_datetime_obj)
 
 
 class TestKubernetesWorkerConfiguration(unittest.TestCase):
@@ -242,7 +247,7 @@ class TestKubernetesWorkerConfiguration(unittest.TestCase):
                                                         )
 
         pod = worker_config.make_pod("default", str(uuid.uuid4()), "test_pod_id", "test_dag_id",
-                                     "test_task_id", str(datetime.utcnow()), "bash -c 'ls /'",
+                                     "test_task_id", str(datetime.utcnow()), 1, "bash -c 'ls /'",
                                      kube_executor_config)
 
         self.assertTrue(pod.affinity['podAntiAffinity'] is not None)
@@ -266,7 +271,7 @@ class TestKubernetesWorkerConfiguration(unittest.TestCase):
                                                         )
 
         pod = worker_config.make_pod("default", str(uuid.uuid4()), "test_pod_id", "test_dag_id",
-                                     "test_task_id", str(datetime.utcnow()), "bash -c 'ls /'",
+                                     "test_task_id", str(datetime.utcnow()), 1, "bash -c 'ls /'",
                                      kube_executor_config)
 
         self.assertTrue(pod.affinity['podAntiAffinity'] is not None)

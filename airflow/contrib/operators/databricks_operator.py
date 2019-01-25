@@ -24,6 +24,7 @@ import time
 from airflow.exceptions import AirflowException
 from airflow.contrib.hooks.databricks_hook import DatabricksHook
 from airflow.models import BaseOperator
+from airflow.utils.decorators import apply_defaults
 
 
 XCOM_RUN_ID_KEY = 'run_id'
@@ -103,6 +104,7 @@ class DatabricksSubmitRunOperator(BaseOperator):
     to call the ``api/2.0/jobs/runs/submit`` endpoint and pass it directly
     to our ``DatabricksSubmitRunOperator`` through the ``json`` parameter.
     For example ::
+
         json = {
           'new_cluster': {
             'spark_version': '2.1.0-db3-scala2.11',
@@ -118,6 +120,7 @@ class DatabricksSubmitRunOperator(BaseOperator):
     of the ``DatabricksSubmitRunOperator`` directly. Note that there is exactly
     one named parameter for each top level parameter in the ``runs/submit``
     endpoint. In this method, your code would look like this: ::
+
         new_cluster = {
           'spark_version': '2.1.0-db3-scala2.11',
           'num_workers': 2
@@ -218,6 +221,7 @@ class DatabricksSubmitRunOperator(BaseOperator):
     ui_color = '#1CB1C2'
     ui_fgcolor = '#fff'
 
+    @apply_defaults
     def __init__(
             self,
             json=None,
@@ -419,6 +423,7 @@ class DatabricksRunNowOperator(BaseOperator):
     ui_color = '#1CB1C2'
     ui_fgcolor = '#fff'
 
+    @apply_defaults
     def __init__(
             self,
             job_id,
