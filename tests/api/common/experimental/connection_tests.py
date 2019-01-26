@@ -21,7 +21,7 @@ import unittest
 from airflow import settings, models
 from airflow.api.common.experimental import connections
 from airflow.exceptions import MissingArgument, MultipleConnectionsFound, IncompatibleArgument
-from airflow.models import Connection
+from airflow.models.connection import Connection
 from airflow.settings import Session
 
 
@@ -54,7 +54,7 @@ class ConnectionTests(unittest.TestCase):
 
         session.query(models.Pool).delete()
         session.query(models.Variable).delete()
-        session.query(models.Connection).delete()
+        session.query(Connection).delete()
         session.commit()
         session.close()
 
@@ -145,8 +145,8 @@ class ConnectionTests(unittest.TestCase):
         for index in range(1, 5):
             conn_id = 'new%s' % index
             result = (session
-                      .query(models.Connection)
-                      .filter(models.Connection.conn_id == conn_id)
+                      .query(Connection)
+                      .filter(Connection.conn_id == conn_id)
                       .first())
             result = (result.conn_id, result.conn_type, result.host,
                       result.port, result.get_extra())
@@ -160,8 +160,8 @@ class ConnectionTests(unittest.TestCase):
 
         # validate duplicate connections made it to the db
         dup_conns = (session
-                     .query(models.Connection)
-                     .filter(models.Connection.conn_id == 'new3')).all()
+                     .query(Connection)
+                     .filter(Connection.conn_id == 'new3')).all()
         print(dup_conns)
         self.assertEqual(2, len(dup_conns))
         for conn in dup_conns:
@@ -200,14 +200,14 @@ class ConnectionTests(unittest.TestCase):
                          '`conn_id`=new2. Specify `delete_all=True` to remove all')
 
         # make sure none were deleted
-        self.assertEqual(2, len((session.query(models.Connection)
-                                 .filter(models.Connection.conn_id == 'new2').all())))
+        self.assertEqual(2, len((session.query(Connection)
+                                 .filter(Connection.conn_id == 'new2').all())))
 
         self.assertEqual(connections.delete_connection(conn_id='new2', delete_all=True),
                          "Successfully deleted 2 connections with `conn_id`=new2")
 
         # make sure none were deleted
-        self.assertEqual(0, len((session.query(models.Connection).all())))
+        self.assertEqual(0, len((session.query(Connection).all())))
 
         # Attempt to delete a non-existing connnection
         self.assertEqual(connections.delete_connection(conn_id='non_existent'),
@@ -394,8 +394,8 @@ class ConnectionTests(unittest.TestCase):
         for index in range(1, 4):
             conn_id = 'new%s' % index
             result = (session
-                      .query(models.Connection)
-                      .filter(models.Connection.conn_id == conn_id)
+                      .query(Connection)
+                      .filter(Connection.conn_id == conn_id)
                       .first())
             result = (result.conn_id, result.conn_type, result.host,
                       result.port, result.get_extra())
@@ -414,8 +414,8 @@ class ConnectionTests(unittest.TestCase):
 
         # validate duplicate connections did not update in db
         dup_conns = (session
-                     .query(models.Connection)
-                     .filter(models.Connection.conn_id == 'new3')).all()
+                     .query(Connection)
+                     .filter(Connection.conn_id == 'new3')).all()
         self.assertEqual(2, len(dup_conns))
         for conn in dup_conns:
             result = (conn.conn_id, conn.conn_type, conn.host,

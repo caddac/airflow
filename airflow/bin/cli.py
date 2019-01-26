@@ -1132,7 +1132,7 @@ def connections(args):
         try:
             print(api_client.delete_connection(args.conn_id, args.delete_all))
         except MissingArgument as ma:
-            print(ma)
+            raise SystemExit(ma)
         return
 
     if args.add:
@@ -1149,7 +1149,7 @@ def connections(args):
                 conn_extra=args.conn_extra)
 
         except MissingArgument as ma:
-            print(ma)
+            raise SystemExit(ma)
         else:
             # format success message!
             msg = 'Successfully added `conn_id`={conn_id} : {uri}\n'
@@ -1172,11 +1172,11 @@ def connections(args):
                 conn_extra=args.conn_extra)
 
         except MissingArgument as ma:
-            print(ma)
+            raise SystemExit(ma)
         except MultipleConnectionsFound as mcf:
-            print(mcf)
+            raise SystemExit(mcf)
         except ConnectionNotFound as cnf:
-            print(cnf)
+            raise SystemExit(cnf)
         else:
             # format success message!
             msg = 'Successfully updated `conn_id`={conn_id} : {uri}\n'

@@ -245,7 +245,9 @@ class Connection(Base, LoggingMixin):
             elif self.conn_type == 'gcpcloudsql':
                 from airflow.contrib.hooks.gcp_sql_hook import CloudSqlDatabaseHook
                 return CloudSqlDatabaseHook(gcp_cloudsql_conn_id=self.conn_id)
-        except Exception:
+        except Exception as ex:
+            self.log.exception(ex)
+            self.log.error(f'Exception getting hook: {ex}')
             pass
 
     def get_uri(self, show_password=True):

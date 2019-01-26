@@ -2799,7 +2799,7 @@ class ConnectionTest(unittest.TestCase):
     def test_get_connections_db(self):
         conns = BaseHook.get_connections(conn_id='airflow_db')
         assert len(conns) == 1
-        assert conns[0].host == 'localhost'
+        assert conns[0].host == 'mysql'
         assert conns[0].schema == 'airflow'
         assert conns[0].login == 'root'
 
