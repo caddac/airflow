@@ -137,14 +137,13 @@ class ConnectionTests(unittest.TestCase):
             self.assertEqual(ia.exception, "Connections with the same id must all be of the same type")
 
         # validate expected connections reached the DB
-        session = settings.Session()
         extra = {'new1': None,
                  'new2': None,
                  'new3': "{'foo':'bar'}", }
 
         for index in range(1, 5):
             conn_id = 'new%s' % index
-            result = (session
+            result = (self.session
                       .query(Connection)
                       .filter(Connection.conn_id == conn_id)
                       .first())
@@ -154,15 +153,13 @@ class ConnectionTests(unittest.TestCase):
                 self.assertEqual(result, (conn_id, 'postgres', 'host', 5432,
                                           extra[conn_id]))
             elif conn_id == 'new4':
-                print('result: ', result)
                 self.assertEqual(result, (conn_id, 'google_cloud_platform',
                                           None, None, "{'extra':'yes'}"))
 
         # validate duplicate connections made it to the db
-        dup_conns = (session
+        dup_conns = (self.session
                      .query(Connection)
                      .filter(Connection.conn_id == 'new3')).all()
-        print(dup_conns)
         self.assertEqual(2, len(dup_conns))
         for conn in dup_conns:
             result = (conn.conn_id, conn.conn_type, conn.host,
@@ -171,7 +168,6 @@ class ConnectionTests(unittest.TestCase):
                                       extra['new3']))
 
     def test_delete_connection(self):
-        session = settings.Session()
         # add some conns to delete
         uri = 'postgres://airflow:airflow@host:5432/airflow'
 
@@ -200,14 +196,14 @@ class ConnectionTests(unittest.TestCase):
                          '`conn_id`=new2. Specify `delete_all=True` to remove all')
 
         # make sure none were deleted
-        self.assertEqual(2, len((session.query(Connection)
+        self.assertEqual(2, len((self.session.query(Connection)
                                  .filter(Connection.conn_id == 'new2').all())))
 
         self.assertEqual(connections.delete_connection(conn_id='new2', delete_all=True),
                          "Successfully deleted 2 connections with `conn_id`=new2")
 
         # make sure none were deleted
-        self.assertEqual(0, len((session.query(Connection).all())))
+        self.assertEqual(0, len((self.session.query(Connection).all())))
 
         # Attempt to delete a non-existing connnection
         self.assertEqual(connections.delete_connection(conn_id='non_existent'),
@@ -216,7 +212,7 @@ class ConnectionTests(unittest.TestCase):
         # Attempt to delete a non-existing connnection
         self.assertRaises(MissingArgument, connections.delete_connection, None)
 
-        session.close()
+        self.session.close()
 
     def test_list_connections(self):
 
@@ -385,7 +381,6 @@ class ConnectionTests(unittest.TestCase):
         ), con4)
 
         # validate updates reached the DB
-        session = settings.Session()
         extra = {'new1': None,
                  'new2': None,
                  'new3': "{'bar':'foo'}",
@@ -393,7 +388,7 @@ class ConnectionTests(unittest.TestCase):
 
         for index in range(1, 4):
             conn_id = 'new%s' % index
-            result = (session
+            result = (self.session
                       .query(Connection)
                       .filter(Connection.conn_id == conn_id)
                       .first())
@@ -403,7 +398,6 @@ class ConnectionTests(unittest.TestCase):
                 self.assertEqual(result, (conn_id, 'postgres', 'host', 1234,
                                           extra[conn_id]))
             elif conn_id == 'new4':
-                print('result: ', result)
                 self.assertEqual(result, (conn_id, 'random_type',
                                           None, None, extra[conn_id]))
 
@@ -413,7 +407,7 @@ class ConnectionTests(unittest.TestCase):
                           conn_extra="{'foo':'bar'}")
 
         # validate duplicate connections did not update in db
-        dup_conns = (session
+        dup_conns = (self.session
                      .query(Connection)
                      .filter(Connection.conn_id == 'new3')).all()
         self.assertEqual(2, len(dup_conns))
