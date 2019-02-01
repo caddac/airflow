@@ -54,8 +54,11 @@ from airflow import models, jobs
 from airflow import settings
 from airflow.api.common.experimental.mark_tasks import (set_dag_run_state_to_success,
                                                         set_dag_run_state_to_failed)
-from airflow.models import XCom, DagRun, errors
+from airflow.models import DagRun, errors
 from airflow.models.connection import Connection
+from airflow.models.slamiss import SlaMiss
+from airflow.models.taskfail import TaskFail
+from airflow.models.xcom import XCom
 from airflow.ti_deps.dep_context import DepContext, QUEUE_DEPS, SCHEDULER_DEPS
 from airflow.utils import timezone
 from airflow.utils.dates import infer_time_unit, scale_time_units
@@ -1425,7 +1428,7 @@ class Airflow(AirflowBaseView):
 
         tis = dag.get_task_instances(
             session, start_date=min_date, end_date=base_date)
-        TF = models.TaskFail
+        TF = TaskFail
         ti_fails = (
             session.query(TF)
                    .filter(TF.dag_id == dag.dag_id,
@@ -1720,7 +1723,7 @@ class Airflow(AirflowBaseView):
             ti for ti in dag.get_task_instances(session, dttm, dttm)
             if ti.start_date]
         tis = sorted(tis, key=lambda ti: ti.start_date)
-        TF = models.TaskFail
+        TF = TaskFail
         ti_fails = list(itertools.chain(*[(
             session
             .query(TF)
@@ -1885,7 +1888,7 @@ class AirflowModelView(ModelView):
 class SlaMissModelView(AirflowModelView):
     route_base = '/slamiss'
 
-    datamodel = AirflowModelView.CustomSQLAInterface(models.SlaMiss)
+    datamodel = AirflowModelView.CustomSQLAInterface(SlaMiss)
 
     base_permissions = ['can_list']
 
@@ -1907,7 +1910,7 @@ class SlaMissModelView(AirflowModelView):
 class XComModelView(AirflowModelView):
     route_base = '/xcom'
 
-    datamodel = AirflowModelView.CustomSQLAInterface(models.XCom)
+    datamodel = AirflowModelView.CustomSQLAInterface(XCom)
 
     base_permissions = ['can_add', 'can_list', 'can_edit', 'can_delete']
 
