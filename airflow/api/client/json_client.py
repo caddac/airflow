@@ -125,7 +125,7 @@ class Client(api_client.Client):
         """
         endpoint = '/api/experimental/connections'
         conns = self._request(endpoint)
-        return [conn for conn in conns]
+        return conns
 
     def update_connection(self, conn_id,
                           conn_uri=None,

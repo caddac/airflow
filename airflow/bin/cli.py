@@ -1169,8 +1169,7 @@ def connections(args):
             try:
                 print(api_client.delete_connection(args.conn_id, args.delete_all))
             except MissingArgument as ma:
-                # raise SystemExit(ma)
-                pass
+                raise SystemExit(ma)
             return
 
         if args.add:
