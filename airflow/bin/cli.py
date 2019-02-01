@@ -35,6 +35,7 @@ from argparse import RawTextHelpFormatter
 from builtins import input
 from collections import namedtuple
 
+from airflow.models.connection import Connection
 from airflow.utils.timezone import parse as parsedate
 import json
 from tabulate import tabulate
