@@ -47,6 +47,7 @@ def _build_error_response(err, status_code=None):
     response.status_code = status_code or err.status_code
     return response
 
+
 @csrf.exempt
 @api_experimental.route('/dags/<string:dag_id>/dag_runs', methods=['POST'])
 @requires_authentication
@@ -139,7 +140,6 @@ def task_info(dag_id, task_id):
     except AirflowException as err:
         return _build_error_response(err)
 
-
     # JSONify and return.
     fields = {k: str(v)
               for k, v in vars(info).items()
@@ -191,12 +191,10 @@ def task_instance_info(dag_id, execution_date, task_id):
             .format(execution_date))
         return _build_error_response(error_message, 400)
 
-
     try:
         info = get_task_instance(dag_id, task_id, execution_date)
     except AirflowException as err:
         return _build_error_response(err)
-
 
     # JSONify and return.
     fields = {k: str(v)
@@ -226,7 +224,6 @@ def dag_run_status(dag_id, execution_date):
             'as a date. Example date format: 2015-11-16T14:34:15+00:00'.format(
                 execution_date))
         return _build_error_response(error_message, 400)
-
 
     try:
         info = get_dag_run_state(dag_id, execution_date)
