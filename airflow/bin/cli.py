@@ -258,6 +258,7 @@ def delete_dag(args):
 
 @cli_utils.action_logging
 def pool(args):
+    print(args)
     log = LoggingMixin().log
 
     def _tabulate(pools):
@@ -1145,79 +1146,83 @@ alternative_conn_specs = ['conn_type', 'conn_host',
 
 @cli_utils.action_logging
 def connections(args):
-    if args.list:
-        conns = api_client.list_connections()
-        # format it for the cli
-        conns = list(map(lambda c: (c['conn_id'], c['conn_type'],
-                                    c['host'], c['port'],
-                                    c['is_encrypted'],
-                                    c['is_extra_encrypted'],
-                                    c['extra']), conns))
-        conns = [map(reprlib.repr, conn) for conn in conns]
-        msg = tabulate(conns, ['Conn Id', 'Conn Type', 'Host', 'Port',
-                               'Is Encrypted', 'Is Extra Encrypted', 'Extra'],
-                       tablefmt="fancy_grid")
-        if sys.version_info[0] < 3:
-            msg = msg.encode('utf-8')
-        print(msg)
-        return
-
-    if args.delete:
-        try:
-            print(api_client.delete_connection(args.conn_id, args.delete_all))
-        except MissingArgument as ma:
-            raise SystemExit(ma)
-        return
-
-    if args.add:
-        try:
-            new_conn = api_client.add_connection(
-                conn_id=args.conn_id,
-                conn_uri=args.conn_uri,
-                conn_type=args.conn_type,
-                conn_host=args.conn_host,
-                conn_login=args.conn_login,
-                conn_password=args.conn_password,
-                conn_schema=args.conn_schema,
-                conn_port=args.conn_port,
-                conn_extra=args.conn_extra)
-
-        except MissingArgument as ma:
-            raise SystemExit(ma)
-        else:
-            # format success message!
-            msg = 'Successfully added `conn_id`={conn_id} : {uri}\n'
-            msg = msg.format(conn_id=new_conn['conn_id'],
-                             uri=new_conn['uri'])
+    try:
+        if args.list:
+            conns = api_client.list_connections()
+            # format it for the cli
+            conns = list(map(lambda c: (c['conn_id'], c['conn_type'],
+                                        c['host'], c['port'],
+                                        c['is_encrypted'],
+                                        c['is_extra_encrypted'],
+                                        c['extra']), conns))
+            conns = [map(reprlib.repr, conn) for conn in conns]
+            msg = tabulate(conns, ['Conn Id', 'Conn Type', 'Host', 'Port',
+                                   'Is Encrypted', 'Is Extra Encrypted', 'Extra'],
+                           tablefmt="fancy_grid")
+            if sys.version_info[0] < 3:
+                msg = msg.encode('utf-8')
             print(msg)
-        return
+            return
 
-    if args.update:
-        try:
-            new_conn = api_client.update_connection(
-                conn_id=args.conn_id,
-                conn_uri=args.conn_uri,
-                conn_type=args.conn_type,
-                conn_host=args.conn_host,
-                conn_login=args.conn_login,
-                conn_password=args.conn_password,
-                conn_schema=args.conn_schema,
-                conn_port=args.conn_port,
-                conn_extra=args.conn_extra)
+        if args.delete:
+            try:
+                print(api_client.delete_connection(args.conn_id, args.delete_all))
+            except MissingArgument as ma:
+                # raise SystemExit(ma)
+                pass
+            return
 
-        except MissingArgument as ma:
-            raise SystemExit(ma)
-        except MultipleConnectionsFound as mcf:
-            raise SystemExit(mcf)
-        except ConnectionNotFound as cnf:
-            raise SystemExit(cnf)
-        else:
-            # format success message!
-            msg = 'Successfully updated `conn_id`={conn_id} : {uri}\n'
-            msg = msg.format(conn_id=new_conn['conn_id'],
-                             uri=new_conn['uri'])
-            print(msg)
-        return
+        if args.add:
+            try:
+                new_conn = api_client.add_connection(
+                    conn_id=args.conn_id,
+                    conn_uri=args.conn_uri,
+                    conn_type=args.conn_type,
+                    conn_host=args.conn_host,
+                    conn_login=args.conn_login,
+                    conn_password=args.conn_password,
+                    conn_schema=args.conn_schema,
+                    conn_port=args.conn_port,
+                    conn_extra=args.conn_extra)
+
+            except MissingArgument as ma:
+                raise SystemExit(ma)
+            else:
+                # format success message!
+                msg = 'Successfully added `conn_id`={conn_id} : {uri}\n'
+                msg = msg.format(conn_id=new_conn['conn_id'],
+                                 uri=new_conn['uri'])
+                print(msg)
+            return
+
+        if args.update:
+            try:
+                new_conn = api_client.update_connection(
+                    conn_id=args.conn_id,
+                    conn_uri=args.conn_uri,
+                    conn_type=args.conn_type,
+                    conn_host=args.conn_host,
+                    conn_login=args.conn_login,
+                    conn_password=args.conn_password,
+                    conn_schema=args.conn_schema,
+                    conn_port=args.conn_port,
+                    conn_extra=args.conn_extra)
+
+            except MissingArgument as ma:
+                raise SystemExit(ma)
+            except MultipleConnectionsFound as mcf:
+                raise SystemExit(mcf)
+            except ConnectionNotFound as cnf:
+                raise SystemExit(cnf)
+            else:
+                # format success message!
+                msg = 'Successfully updated `conn_id`={conn_id} : {uri}\n'
+                msg = msg.format(conn_id=new_conn['conn_id'],
+                                 uri=new_conn['uri'])
+                print(msg)
+            return
+    except (AirflowException, IOError) as err:
+        log.error(err)
 
 
 @cli_utils.action_logging

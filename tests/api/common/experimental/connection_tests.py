@@ -20,7 +20,8 @@
 import unittest
 from airflow import settings, models
 from airflow.api.common.experimental import connections
-from airflow.exceptions import MissingArgument, MultipleConnectionsFound, IncompatibleArgument
+from airflow.exceptions import MissingArgument, MultipleConnectionsFound, IncompatibleArgument, \
+    ConnectionNotFound
 from airflow.models.connection import Connection
 from airflow.settings import Session
 
@@ -202,14 +203,13 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(connections.delete_connection(conn_id='new2', delete_all=True),
                          "Successfully deleted 2 connections with `conn_id`=new2")
 
-        # make sure none were deleted
+        # make sure all were deleted
         self.assertEqual(0, len((self.session.query(Connection).all())))
 
-        # Attempt to delete a non-existing connnection
-        self.assertEqual(connections.delete_connection(conn_id='non_existent'),
-                         "Did not find a connection with `conn_id`=non_existent")
+        # Attempt to delete a non-existing connection
+        self.assertRaises(ConnectionNotFound, connections.delete_connection, 'non_existent')
 
-        # Attempt to delete a non-existing connnection
+        # Attempt to delete a non-existing connection
         self.assertRaises(MissingArgument, connections.delete_connection, None)
 
         self.session.close()

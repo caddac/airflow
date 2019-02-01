@@ -94,7 +94,6 @@ def add_connection(
 
 
 def delete_connection(conn_id, delete_all=False):
-
     if conn_id is None:
         raise MissingArgument('To delete a connection, you must provide a value for ' +
                               'the --conn_id flag.')
@@ -129,9 +128,7 @@ def delete_connection(conn_id, delete_all=False):
             msg = msg.format(conn_id=conn_id, num_conns=len(to_delete))
             return msg
     elif len(to_delete) == 0:
-        msg = 'Did not find a connection with `conn_id`={conn_id}'
-        msg = msg.format(conn_id=conn_id)
-        return msg
+        raise ConnectionNotFound('Did not find a connection with `conn_id`={conn_id}'.format(conn_id=conn_id))
 
 
 def list_connections():
