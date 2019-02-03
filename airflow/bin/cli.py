@@ -259,7 +259,6 @@ def delete_dag(args):
 
 @cli_utils.action_logging
 def pool(args):
-    print(args)
     log = LoggingMixin().log
 
     def _tabulate(pools):

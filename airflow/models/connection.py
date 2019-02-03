@@ -248,7 +248,7 @@ class Connection(Base, LoggingMixin):
                 return CloudSqlDatabaseHook(gcp_cloudsql_conn_id=self.conn_id)
         except Exception as ex:
             self.log.exception(ex)
-            self.log.error(f'Exception getting hook: {ex}')
+            self.log.error('Exception getting hook: {ex}'.format(ex=ex))
             pass
 
     def get_uri(self, show_password=True):
