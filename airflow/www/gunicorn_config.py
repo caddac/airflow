@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,19 +18,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import setproctitle
+from airflow import settings
 
-class Volume:
-    """Defines Kubernetes Volume"""
 
-    def __init__(self, name, configs):
-        """ Adds Kubernetes Volume to pod. allows pod to access features like ConfigMaps
-        and Persistent Volumes
-        :param name: the name of the volume mount
-        :type name: str
-        :param configs: dictionary of any features needed for volume.
-        We purposely keep this vague since there are multiple volume types with changing
-        configs.
-        :type configs: dict
-        """
-        self.name = name
-        self.configs = configs
+def post_worker_init(dummy_worker):
+    setproctitle.setproctitle(
+        settings.GUNICORN_WORKER_READY_PREFIX + setproctitle.getproctitle()
+    )
