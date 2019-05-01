@@ -45,7 +45,7 @@ class HdfsSensor(BaseSensorOperator):
                  hook=HDFSHook,
                  *args,
                  **kwargs):
-        super(HdfsSensor, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if ignored_ext is None:
             ignored_ext = ['_COPYING_']
         self.filepath = filepath
@@ -103,7 +103,7 @@ class HdfsSensor(BaseSensorOperator):
 
     def poke(self, context):
         sb = self.hook(self.hdfs_conn_id).get_conn()
-        self.log.info('Poking for file {self.filepath}'.format(**locals()))
+        self.log.info('Poking for file %s', self.filepath)
         try:
             # IMOO it's not right here, as there no raise of any kind.
             # if the filepath is let's say '/data/mydirectory',

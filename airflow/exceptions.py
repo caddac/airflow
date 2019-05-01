@@ -58,6 +58,10 @@ class AirflowRescheduleException(AirflowException):
         self.reschedule_date = reschedule_date
 
 
+class InvalidStatsNameException(AirflowException):
+    pass
+
+
 class AirflowTaskTimeout(AirflowException):
     pass
 
@@ -106,6 +110,16 @@ class TaskInstanceNotFound(AirflowNotFoundException):
 
 class PoolNotFound(AirflowNotFoundException):
     """Raise when a Pool is not available in the system"""
+    pass
+
+
+class NoAvailablePoolSlot(AirflowException):
+    """Raise when there is not enough slots in pool"""
+    pass
+
+
+class DagConcurrencyLimitReached(AirflowException):
+    """Raise when concurrency limit is reached"""
     pass
 
 

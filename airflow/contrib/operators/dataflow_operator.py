@@ -92,7 +92,7 @@ class DataFlowJavaOperator(BaseOperator):
         Cloud Platform for the dataflow job status while the job is in the
         JOB_STATE_RUNNING state.
     :type poll_sleep: int
-    :param job_class: The name of the dataflow job class to be executued, it
+    :param job_class: The name of the dataflow job class to be executed, it
         is often not the main class configured in the dataflow jar file.
     :type job_class: str
 
@@ -154,7 +154,7 @@ class DataFlowJavaOperator(BaseOperator):
             job_class=None,
             *args,
             **kwargs):
-        super(DataFlowJavaOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         dataflow_default_options = dataflow_default_options or {}
         options = options or {}
@@ -272,7 +272,7 @@ class DataflowTemplateOperator(BaseOperator):
             poll_sleep=10,
             *args,
             **kwargs):
-        super(DataflowTemplateOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         dataflow_default_options = dataflow_default_options or {}
         parameters = parameters or {}
@@ -347,7 +347,7 @@ class DataFlowPythonOperator(BaseOperator):
             *args,
             **kwargs):
 
-        super(DataFlowPythonOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.py_file = py_file
         self.job_name = job_name
@@ -399,7 +399,7 @@ class GoogleCloudBucketHelper(object):
         :param file_name: The full path of input file.
         :type file_name: str
         :return: The full path of local file.
-        :type str
+        :rtype: str
         """
         if not file_name.startswith('gs://'):
             return file_name

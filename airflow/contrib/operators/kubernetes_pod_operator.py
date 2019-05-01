@@ -21,13 +21,6 @@ from airflow.utils.decorators import apply_defaults
 from airflow.contrib.kubernetes import kube_client, pod_generator, pod_launcher
 from airflow.contrib.kubernetes.pod import Resources
 from airflow.utils.state import State
-from airflow.contrib.kubernetes.volume_mount import VolumeMount  # noqa
-from airflow.contrib.kubernetes.volume import Volume  # noqa
-from airflow.contrib.kubernetes.secret import Secret  # noqa
-
-template_fields = ('templates_dict',)
-template_ext = tuple()
-ui_color = '#ffefeb'
 
 
 class KubernetesPodOperator(BaseOperator):
@@ -78,16 +71,24 @@ class KubernetesPodOperator(BaseOperator):
     :type affinity: dict
     :param node_selectors: A dict containing a group of scheduling rules
     :type node_selectors: dict
-    :param config_file: The path to the Kubernetes config file
+    :param config_file: The path to the Kubernetes config file.
+        If not specified, default value is ``~/.kube/config``
     :type config_file: str
-    :param xcom_push: If xcom_push is True, the content of the file
+    :param do_xcom_push: If True, the content of the file
         /airflow/xcom/return.json in the container will also be pushed to an
         XCom when the container completes.
-    :type xcom_push: bool
+    :type do_xcom_push: bool
+    :param is_delete_operator_pod: What to do when the pod reaches its final
+        state, or the execution is interrupted.
+        If False (default): do nothing, If True: delete the pod
+    :type is_delete_operator_pod: bool
     :param hostnetwork: If True enable host networking on the pod
     :type hostnetwork: bool
     :param tolerations: A list of kubernetes tolerations
     :type tolerations: list tolerations
+    :param configmaps: A list of configmap names objects that we
+        want mount as env variables
+    :type configmaps: list[str]
     """
     template_fields = ('cmds', 'arguments', 'env_vars', 'config_file')
 
@@ -123,9 +124,11 @@ class KubernetesPodOperator(BaseOperator):
             pod.node_selectors = self.node_selectors
             pod.hostnetwork = self.hostnetwork
             pod.tolerations = self.tolerations
+            pod.configmaps = self.configmaps
+            pod.security_context = self.security_context
 
             launcher = pod_launcher.PodLauncher(kube_client=client,
-                                                extract_xcom=self.xcom_push)
+                                                extract_xcom=self.do_xcom_push)
             try:
                 (final_state, result) = launcher.run_pod(
                     pod,
@@ -139,8 +142,8 @@ class KubernetesPodOperator(BaseOperator):
                 raise AirflowException(
                     'Pod returned a failure: {state}'.format(state=final_state)
                 )
-            if self.xcom_push:
-                return result
+
+            return result
         except AirflowException as ex:
             raise AirflowException('Pod Launching failed: {error}'.format(error=ex))
 
@@ -165,16 +168,18 @@ class KubernetesPodOperator(BaseOperator):
                  resources=None,
                  affinity=None,
                  config_file=None,
-                 xcom_push=False,
+                 do_xcom_push=False,
                  node_selectors=None,
                  image_pull_secrets=None,
                  service_account_name="default",
                  is_delete_operator_pod=False,
                  hostnetwork=False,
                  tolerations=None,
+                 configmaps=None,
+                 security_context=None,
                  *args,
                  **kwargs):
-        super(KubernetesPodOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.image = image
         self.namespace = namespace
         self.cmds = cmds or []
@@ -193,7 +198,10 @@ class KubernetesPodOperator(BaseOperator):
         self.node_selectors = node_selectors or {}
         self.annotations = annotations or {}
         self.affinity = affinity or {}
-        self.xcom_push = xcom_push
+        self.do_xcom_push = do_xcom_push
+        if kwargs.get('xcom_push') is not None:
+            raise AirflowException("'xcom_push' was deprecated, use 'do_xcom_push' instead")
+
         self.resources = resources or Resources()
         self.config_file = config_file
         self.image_pull_secrets = image_pull_secrets
@@ -201,3 +209,5 @@ class KubernetesPodOperator(BaseOperator):
         self.is_delete_operator_pod = is_delete_operator_pod
         self.hostnetwork = hostnetwork
         self.tolerations = tolerations or []
+        self.configmaps = configmaps or []
+        self.security_context = security_context or {}

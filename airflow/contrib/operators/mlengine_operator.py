@@ -182,7 +182,7 @@ class MLEngineBatchPredictionOperator(BaseOperator):
                  delegate_to=None,
                  *args,
                  **kwargs):
-        super(MLEngineBatchPredictionOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._project_id = project_id
         self._job_id = job_id
@@ -267,8 +267,9 @@ class MLEngineBatchPredictionOperator(BaseOperator):
             raise
 
         if finished_prediction_job['state'] != 'SUCCEEDED':
-            self.log.error('MLEngine batch prediction job failed: {}'.format(
-                str(finished_prediction_job)))
+            self.log.error(
+                'MLEngine batch prediction job failed: %s', str(finished_prediction_job)
+            )
             raise RuntimeError(finished_prediction_job['errorMessage'])
 
         return finished_prediction_job['predictionOutput']
@@ -314,7 +315,7 @@ class MLEngineModelOperator(BaseOperator):
                  delegate_to=None,
                  *args,
                  **kwargs):
-        super(MLEngineModelOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._project_id = project_id
         self._model = model
         self._operation = operation
@@ -406,7 +407,7 @@ class MLEngineVersionOperator(BaseOperator):
                  *args,
                  **kwargs):
 
-        super(MLEngineVersionOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._project_id = project_id
         self._model_name = model_name
         self._version_name = version_name
@@ -534,7 +535,7 @@ class MLEngineTrainingOperator(BaseOperator):
                  mode='PRODUCTION',
                  *args,
                  **kwargs):
-        super(MLEngineTrainingOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._project_id = project_id
         self._job_id = job_id
         self._package_uris = package_uris
@@ -597,8 +598,7 @@ class MLEngineTrainingOperator(BaseOperator):
 
         if self._mode == 'DRY_RUN':
             self.log.info('In dry_run mode.')
-            self.log.info('MLEngine Training job request is: {}'.format(
-                training_request))
+            self.log.info('MLEngine Training job request is: %s', training_request)
             return
 
         hook = MLEngineHook(
@@ -617,6 +617,5 @@ class MLEngineTrainingOperator(BaseOperator):
             raise
 
         if finished_training_job['state'] != 'SUCCEEDED':
-            self.log.error('MLEngine training job failed: {}'.format(
-                str(finished_training_job)))
+            self.log.error('MLEngine training job failed: %s', str(finished_training_job))
             raise RuntimeError(finished_training_job['errorMessage'])

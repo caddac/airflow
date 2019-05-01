@@ -49,7 +49,7 @@ class GceBaseOperator(BaseOperator):
         self.api_version = api_version
         self._validate_inputs()
         self._hook = GceHook(gcp_conn_id=self.gcp_conn_id, api_version=self.api_version)
-        super(GceBaseOperator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _validate_inputs(self):
         if self.project_id == '':
@@ -100,7 +100,7 @@ class GceInstanceStartOperator(GceBaseOperator):
                  gcp_conn_id='google_cloud_default',
                  api_version='v1',
                  *args, **kwargs):
-        super(GceInstanceStartOperator, self).__init__(
+        super().__init__(
             project_id=project_id, zone=zone, resource_id=resource_id,
             gcp_conn_id=gcp_conn_id, api_version=api_version, *args, **kwargs)
 
@@ -147,7 +147,7 @@ class GceInstanceStopOperator(GceBaseOperator):
                  gcp_conn_id='google_cloud_default',
                  api_version='v1',
                  *args, **kwargs):
-        super(GceInstanceStopOperator, self).__init__(
+        super().__init__(
             project_id=project_id, zone=zone, resource_id=resource_id,
             gcp_conn_id=gcp_conn_id, api_version=api_version, *args, **kwargs)
 
@@ -211,7 +211,7 @@ class GceSetMachineTypeOperator(GceBaseOperator):
         if validate_body:
             self._field_validator = GcpBodyFieldValidator(
                 SET_MACHINE_TYPE_VALIDATION_SPECIFICATION, api_version=api_version)
-        super(GceSetMachineTypeOperator, self).__init__(
+        super().__init__(
             project_id=project_id, zone=zone, resource_id=resource_id,
             gcp_conn_id=gcp_conn_id, api_version=api_version, *args, **kwargs)
 
@@ -339,7 +339,7 @@ class GceInstanceTemplateCopyOperator(GceBaseOperator):
                 GCE_INSTANCE_TEMPLATE_VALIDATION_PATCH_SPECIFICATION, api_version=api_version)
         self._field_sanitizer = GcpBodyFieldSanitizer(
             GCE_INSTANCE_TEMPLATE_FIELDS_TO_SANITIZE)
-        super(GceInstanceTemplateCopyOperator, self).__init__(
+        super().__init__(
             project_id=project_id, zone='global', resource_id=resource_id,
             gcp_conn_id=gcp_conn_id, api_version=api_version, *args, **kwargs)
 
@@ -359,8 +359,11 @@ class GceInstanceTemplateCopyOperator(GceBaseOperator):
             # Group Manager. We assume success if the template is simply present
             existing_template = self._hook.get_instance_template(
                 resource_id=self.body_patch['name'], project_id=self.project_id)
-            self.log.info("The {} template already existed. It was likely "
-                          "created by previous run of the operator. Assuming success.")
+            self.log.info(
+                "The %s template already existed. It was likely created by previous run of the operator. "
+                "Assuming success.",
+                existing_template
+            )
             return existing_template
         except HttpError as e:
             # We actually expect to get 404 / Not Found here as the template should
@@ -372,8 +375,7 @@ class GceInstanceTemplateCopyOperator(GceBaseOperator):
         new_body = deepcopy(old_body)
         self._field_sanitizer.sanitize(new_body)
         new_body = merge(new_body, self.body_patch)
-        self.log.info("Calling insert instance template with updated body: {}".
-                      format(new_body))
+        self.log.info("Calling insert instance template with updated body: %s", new_body)
         self._hook.insert_instance_template(body=new_body,
                                             request_id=self.request_id,
                                             project_id=self.project_id)
@@ -446,7 +448,7 @@ class GceInstanceGroupManagerUpdateTemplateOperator(GceBaseOperator):
             raise AirflowException("Api version v1 does not have update/patch "
                                    "operations for Instance Group Managers. Use beta"
                                    " api version or above")
-        super(GceInstanceGroupManagerUpdateTemplateOperator, self).__init__(
+        super().__init__(
             project_id=project_id, zone=self.zone, resource_id=resource_id,
             gcp_conn_id=gcp_conn_id, api_version=api_version, *args, **kwargs)
 
